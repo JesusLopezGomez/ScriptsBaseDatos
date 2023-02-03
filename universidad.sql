@@ -75,7 +75,7 @@ WHERE CUATRIMESTRE = 2 ORDER BY IDASIGNATURA;
 
 --16.Mostrar el nombre de todas las mujeres que viven en “Madrid”.
 SELECT NOMBRE FROM PERSONA P 
-WHERE UPPER(CIUDAD) = 'MADRID' 
+WHERE CIUDAD = 'Madrid' 
 AND VARON = 0;
 
 --17.Mostrar el nombre y los teléfonos de aquellas personas cuyo teléfono empieza por 91
@@ -103,7 +103,8 @@ WHERE NUMEROMATRICULA >= 3;
 --el precio de la segunda repetición (un 30 por ciento más que el coste básico)
 -- y el precio de la tercer repetición (un 60 por ciento más que el coste básico).
 SELECT COSTEBASICO,NOMBRE,COSTEBASICO + 0.10*COSTEBASICO AS PRIMERA_REPETICION,
-COSTEBASICO + 0.30*COSTEBASICO AS SEGUNDA_REPETICION, COSTEBASICO + 0.60*COSTEBASICO AS TERCERA_REPETICION FROM ASIGNATURA A;
+COSTEBASICO + 0.30*COSTEBASICO AS SEGUNDA_REPETICION, COSTEBASICO + 0.60*COSTEBASICO 
+AS TERCERA_REPETICION FROM ASIGNATURA A;
 
 --22.Mostrar todos los datos de las personas que tenemos en la base de datos que han nacido antes de la década de los 70.
 SELECT * FROM PERSONA P 
