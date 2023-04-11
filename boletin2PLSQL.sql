@@ -1,87 +1,101 @@
---Crea un procedimiento llamado ESCRIBE para mostrar por pantalla el
---mensaje HOLA MUNDO.
-
+--Escribe un procedimiento que muestre el número de empleados y el salario
+--mínimo, máximo y medio del departamento de FINANZAS. Debe hacerse
+--uso de cursores implícitos, es decir utilizar SELECT ... INTO
 CREATE OR REPLACE 
-PROCEDURE ESCRIBE
+PROCEDURE EJERCICIO1
 AS
-BEGIN
-	DBMS_OUTPUT.PUT_LINE('HOLA MUNDO');
-END;
-
-BEGIN
-	ESCRIBE();
-END;
-
---Crea un procedimiento llamado ESCRIBE_MENSAJE que tenga un
---parámetro de tipo VARCHAR2 que recibe un texto y lo muestre por pantalla.
---La forma del procedimiento ser. la siguiente:
-
-CREATE OR REPLACE 
-PROCEDURE ESCRIBE2(TEXTO VARCHAR2)
-AS
-BEGIN
-	DBMS_OUTPUT.PUT_LINE(TEXTO);
-END;
-
-BEGIN
-	ESCRIBE2('PLSQL');
-END;
-
---Crea un procedimiento llamado SERIE que muestre por pantalla una serie de
---números desde un mínimo hasta un máximo con un determinado paso. La
---forma del procedimiento ser. la siguiente:
-
-CREATE OR REPLACE 
-PROCEDURE SERIE(MINIMO NUMBER, MAXIMO NUMBER, PASO NUMBER)
-AS 
-DECLARE 
-	MINIMO NUMBER(6) := MINIMO
+	NUM_EMPLEADOS NUMBER;
+	MINIMO NUMBER;
+	MAXIMO NUMBER;
+	MEDIA NUMBER;
 BEGIN 
-	 WHILE MINIMO <= MAXIMO LOOP
-	 	DBMS_OUTPUT.PUT_LINE (MINIMO);
-	 	MINIMO = MINIMO+PASO;
-	 END LOOP;
+	SELECT COUNT(E.NUMEM),MIN(E.SALAR),MAX(E.SALAR),AVG(E.SALAR) INTO NUM_EMPLEADOS,MINIMO,MAXIMO,MEDIA
+	FROM EMPLEADOS E, DEPARTAMENTOS D
+	WHERE E.NUMDE = D.NUMDE AND D.NOMDE LIKE 'FINANZAS';
+
+	DBMS_OUTPUT.PUT_LINE(NUM_EMPLEADOS);
+	DBMS_OUTPUT.PUT_LINE(MINIMO);
+	DBMS_OUTPUT.PUT_LINE(MAXIMO);
+	DBMS_OUTPUT.PUT_LINE(MEDIA);
 END;
 
 BEGIN
-	SERIE(1,10,2);
+	EJERCICIO1;
 END;
 
+--Escribe un procedimiento que suba un 10% el salario a los EMPLEADOS
+--con más de 2 hijos y que ganen menos de 2000 €. Para cada empleado se
+--mostrar por pantalla el código de empleado, nombre, salario anterior y final.
+--Utiliza un cursor explícito. La transacción no puede quedarse a medias. Si
+--por cualquier razón no es posible actualizar todos estos salarios, debe
+--deshacerse el trabajo a la situación inicial.
+CREATE OR REPLACE PROCEDURE EJERCICIO2
+AS 	
+CURSOR C_EJERCICIO2 IS 
+	SELECT E.NUMEM, E.NOMEM, E.SALAR
+	FROM EMPLEADOS E
+	WHERE E.SALAR < 2000 AND E.NUMHI > 2;
 
---Crea una función AZAR que reciba dos parámetros y genere un número al
---azar entre un mínimo y máximo indicado. La forma de la función será la
---siguiente:
+	COD_EMPLE EMPLEADOS.NUMEM%TYPE;
+	NOMBRE_EMPLE EMPLEADOS.NOMEM%TYPE;
+	SALARIO_EMPLE EMPLEADOS.SALAR%TYPE;
+BEGIN 
+	OPEN C_EJERCICIO2;
+	LOOP
+		
+		FETCH C_EJERCICIO2 INTO COD_EMPLE,NOMBRE_EMPLE,SALARIO_EMPLE;
+		EXIT WHEN C_EJERCICIO2%NOTFOUND;
+		DBMS_OUTPUT.PUT_LINE('Código empleado: ' || ' ' ||COD_EMPLE);
+		DBMS_OUTPUT.PUT_LINE('Nombre empleado: ' || ' ' ||NOMBRE_EMPLE);
+		DBMS_OUTPUT.PUT_LINE('Salario anterior: ' || ' '||SALARIO_EMPLE);
+		DBMS_OUTPUT.PUT_LINE('Salario final: ' || ' '||(SALARIO_EMPLE + (SALARIO_EMPLE*0.10)));
+		DBMS_OUTPUT.PUT_LINE('------------');
+	END LOOP;
+	CLOSE C_EJERCICIO2;
+END;
+
+BEGIN
+	EJERCICIO2;
+END;
+--Escribe un procedimiento que reciba dos parámetros (número de
+--departamento, hijos). Deber. crearse un cursor explícito al que se le pasarán
+--estos parámetros y que mostrar. los datos de los empleados que pertenezcan
+--al departamento y con el número de hijos indicados. Al final se indicar. el
+--número de empleados obtenidos.
 CREATE OR REPLACE 
-FUNCTION AZAR(MINIMO NUMBER,MAXIMO NUMBER)
-RETURN NUMBER
-IS BEGIN 
+PROCEDURE EJERCICIO3(NUMERO_DEPARTAMENTO NUMBER, NUMERO_HIJOS NUMBER)
+AS
+CURSOR C_DEPARTAMENTO_HIJOS IS 
+	SELECT *
+	FROM EMPLEADOS E;
+
+	DATOS_EMPLE EMPLEADOS%ROWTYPE;
+	CONT NUMBER := 0;
+BEGIN
 	
+	OPEN C_DEPARTAMENTO_HIJOS;
+	LOOP
+		FETCH C_DEPARTAMENTO_HIJOS INTO DATOS_EMPLE;
+		EXIT WHEN C_DEPARTAMENTO_HIJOS%NOTFOUND;
+		IF (DATOS_EMPLE.NUMDE = NUMERO_DEPARTAMENTO) AND DATOS_EMPLE.NUMHI = NUMERO_HIJOS THEN 
+			DBMS_OUTPUT.PUT_LINE('Código empleado: ' || ' ' ||DATOS_EMPLE.NUMEM);
+			DBMS_OUTPUT.PUT_LINE('Código departamento: ' || ' ' ||DATOS_EMPLE.NUMDE);
+			DBMS_OUTPUT.PUT_LINE('Nombre empleado: ' || ' ' ||DATOS_EMPLE.NOMEM);
+			DBMS_OUTPUT.PUT_LINE('Número de hijos: ' || ' '||DATOS_EMPLE.NUMHI);
+			CONT := CONT+1;
+		END IF;
+	END LOOP;
+	CLOSE C_DEPARTAMENTO_HIJOS;
+	DBMS_OUTPUT.PUT_LINE('Número de empleados obtenidos: ' || ' '||CONT);
+
 END;
 
---Crea una función NOTA que reciba un parámetro que será una nota numérica
---entre 0 y 10 y devuelva una cadena de texto con la calificación (Suficiente,
---Bien, Notable, ...). La forma de la función será la siguiente:
-
-CREATE OR REPLACE 
-FUNCTION NOTA(NOTA NUMBER)
-RETURN VARCHAR2 
-IS BEGIN 
-	IF NOTA = 10 OR NOTA=9 THEN 
-		DBMS_OUTPUT.PUT_LINE('Sobresaliente');
-	ELSIF NOTA = 8 OR NOTA = 7 THEN 
-		DBMS_OUTPUT.PUT_LINE('Notable');
-	ELSIF NOTA = 6 THEN 
-		DBMS_OUTPUT.PUT_LINE('Bien');
-
-	ELSIF NOTA = 5 THEN 
-		DBMS_OUTPUT.PUT_LINE('Suficiente');
-
-	ELSIF NOTA < 5 AND NOTA > 0 THEN
-		DBMS_OUTPUT.PUT_LINE('Insuficiente');
-	END IF;
+BEGIN
+	EJERCICIO3(121,3);
 END;
 
-SELECT NOTA(4) AS CALIFICACION FROM DUAL;
+
+
 
 
 

@@ -1,101 +1,91 @@
+--Crea un procedimiento llamado ESCRIBE para mostrar por pantalla el
+--mensaje HOLA MUNDO.
+
+CREATE OR REPLACE 
+PROCEDURE ESCRIBE
+AS
 BEGIN
-	 IF 10 > 5 THEN
-		 DBMS_OUTPUT.PUT_LINE ('Cierto');
-	 ELSE
-		 DBMS_OUTPUT.PUT_LINE ('Falso');
-	 END IF;
+	DBMS_OUTPUT.PUT_LINE('HOLA MUNDO');
 END;
 
---Resultado esperado: cierto
---Resultado obtenido: cierto
+BEGIN
+	ESCRIBE();
+END;
+
+--Crea un procedimiento llamado ESCRIBE_MENSAJE que tenga un
+--parámetro de tipo VARCHAR2 que recibe un texto y lo muestre por pantalla.
+--La forma del procedimiento ser. la siguiente:
+
+CREATE OR REPLACE 
+PROCEDURE ESCRIBE2(TEXTO VARCHAR2)
+AS
+BEGIN
+	DBMS_OUTPUT.PUT_LINE(TEXTO);
+END;
 
 BEGIN
-IF 10 > 5 AND 5 > 1 THEN
-	 	DBMS_OUTPUT.PUT_LINE ('Cierto');
-	ELSE
-		 DBMS_OUTPUT.PUT_LINE ('Falso');
+	ESCRIBE2('PLSQL');
+END;
+
+--Crea un procedimiento llamado SERIE que muestre por pantalla una serie de
+--números desde un mínimo hasta un máximo con un determinado paso. La
+--forma del procedimiento ser. la siguiente:
+
+CREATE OR REPLACE 
+PROCEDURE SERIE(MINIMO NUMBER, MAXIMO NUMBER, PASO NUMBER)
+AS 
+DECLARE 
+	MINIMO NUMBER(6) := MINIMO
+BEGIN 
+	 WHILE MINIMO <= MAXIMO LOOP
+	 	DBMS_OUTPUT.PUT_LINE (MINIMO);
+	 	MINIMO = MINIMO+PASO;
+	 END LOOP;
+END;
+
+BEGIN
+	SERIE(1,10,2);
+END;
+
+
+--Crea una función AZAR que reciba dos parámetros y genere un número al
+--azar entre un mínimo y máximo indicado. La forma de la función será la
+--siguiente:
+CREATE OR REPLACE 
+FUNCTION AZAR(MINIMO NUMBER,MAXIMO NUMBER)
+RETURN NUMBER
+IS BEGIN 
+	
+END;
+
+--Crea una función NOTA que reciba un parámetro que será una nota numérica
+--entre 0 y 10 y devuelva una cadena de texto con la calificación (Suficiente,
+--Bien, Notable, ...). La forma de la función será la siguiente:
+
+CREATE OR REPLACE 
+FUNCTION NOTA(NOTA NUMBER)
+RETURN VARCHAR2 
+IS BEGIN 
+	IF NOTA = 10 OR NOTA=9 THEN 
+		DBMS_OUTPUT.PUT_LINE('Sobresaliente');
+	ELSIF NOTA = 8 OR NOTA = 7 THEN 
+		DBMS_OUTPUT.PUT_LINE('Notable');
+	ELSIF NOTA = 6 THEN 
+		DBMS_OUTPUT.PUT_LINE('Bien');
+
+	ELSIF NOTA = 5 THEN 
+		DBMS_OUTPUT.PUT_LINE('Suficiente');
+
+	ELSIF NOTA < 5 AND NOTA > 0 THEN
+		DBMS_OUTPUT.PUT_LINE('Insuficiente');
 	END IF;
 END;
 
---Resultado esperado: cierto
---Resultado obtenido: cierto
-
-BEGIN
-	IF 10 > 5 AND 5 > 50 THEN
- 		DBMS_OUTPUT.PUT_LINE ('Cierto');
-	ELSE
- 		DBMS_OUTPUT.PUT_LINE ('Falso');
-	END IF;
-END;
-
---Resultado esperado: falso
---Resultado obtenido: falso
-
-BEGIN
-	CASE
-		 WHEN 10 > 5 AND 5 > 50 THEN
-		 	DBMS_OUTPUT.PUT_LINE ('Cierto');
-		 ELSE
-			 DBMS_OUTPUT.PUT_LINE ('Falso');
-	END CASE;
-END;
-
---Resultado esperado: falso
---Resultado obtenido: falso
-
-BEGIN
-	 FOR i IN 1..10 LOOP
-		 DBMS_OUTPUT.PUT_LINE (i);
-	 END LOOP;
-END;
-
---Resultado esperado: del 1 al 10
---Resultado obtenido: del 1 al 10
-
-BEGIN
-	 FOR i IN REVERSE 1..10 LOOP
-		 DBMS_OUTPUT.PUT_LINE (i);
-	 END LOOP;
-END;
-
---Resultado esperado: del 10 al 1
---Resultado obtenido: del 10 al 1
+SELECT NOTA(4) AS CALIFICACION FROM DUAL;
 
 
-DECLARE
- 	num NUMBER(3) := 0;
-BEGIN
-	 WHILE num<=100 LOOP
-	 	DBMS_OUTPUT.PUT_LINE (num);
-	 	num:= num+2;
-	 END LOOP;
-END;
 
---Resultado esperado: numeros pares o de dos en dos hasta el 100
---Resultado obtenido: numeros pares o de dos en dos hasta el 100
 
-DECLARE
-	 num NUMBER(3) := 0;
-BEGIN
-	 LOOP
-	 	DBMS_OUTPUT.PUT_LINE (num);
-	 IF num > 100 THEN EXIT; END IF;
-	 	num:= num+2;
-	 END LOOP;
-END;
 
---Resultado esperado: numeros pares hasta que el numero sea mayor que 100
---Resultado obtenido: numeros pares hasta que el numero sea mayor que 100
 
-DECLARE
- 	num NUMBER(3) := 0;
-BEGIN
-	 LOOP
-		 DBMS_OUTPUT.PUT_LINE (num);
-	 EXIT WHEN num > 100;
-	 num:= num+2;
-	 END LOOP;
-END;
 
---Resultado esperado: numeros pares hasta que el numero sea mayor que 100
---Resultado obtenido: numeros pares hasta que el numero sea mayor que 100
