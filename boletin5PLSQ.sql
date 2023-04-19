@@ -18,23 +18,35 @@ END;
 
 --Realiza un procedimiento MostrarMejoresVendedores que muestre los nombres de los dos
 --vendedores/as con más comisiones.
-CREATE OR REPLACE 
-PROCEDURE MostrarMejoresVendedores
-AS 
+CREATE OR REPLACE PROCEDURE MostrarMejoresVendedores
+AS
+CURSOR c_ordenados IS
+	SELECT e.ENAME , NVL(e.COMM, 0)
+	FROM EMP e
+	ORDER BY NVL(e.COMM, 0) desc ;
 
-NOMBRE EMP.ENAME%TYPE;
+contador NUMBER :=0;
 
 BEGIN
-	SELECT E.ENAME INTO NOMBRE
-	FROM EMP e 
-	WHERE E.COMM = (SELECT MAX(E.COMM)
-				FROM EMP e);
-			
-	DBMS_OUTPUT.PUT_LINE('El mejor vendedor es ' || NOMBRE);
+
+FOR i IN c_ordenados LOOP
+
+	IF contador<2 THEN
+
+		dbms_output.put_line(i.ename);
+
+		contador:=contador+1;
+
+	END IF;
+
+END LOOP;
+
 END;
 
 BEGIN
-	MostrarMejoresVendedores;
+
+MostrarMejoresVendedores;
+
 END;
 
 --Realiza un procedimiento MostrarsodaelpmE que reciba el nombre de un departamento al
@@ -130,9 +142,6 @@ BEGIN
 	BorrarBecarios;
 END;
 
-SELECT *
-FROM EMP e
-WHERE E.EMPNO = 7876 OR E.EMPNO = 7788; 
 
 --7876,7788
 
