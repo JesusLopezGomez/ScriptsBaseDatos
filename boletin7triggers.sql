@@ -3,8 +3,7 @@
 --número y nombre de empleado, así como el tipo de operación realizada
 --(INSERCIÓN o ELIMINACIÓN).
 
-
-
+	
 CREATE OR REPLACE
 TRIGGER Insercion_eliminacion_empleado
 	AFTER INSERT OR DELETE ON EMPLEADOS
@@ -33,17 +32,54 @@ FROM AUDITORIA_EMPLEADOS ae;
 --suceso, valor antiguo y valor nuevo de cada campo, así como el tipo de operación
 --realizada (en este caso MODIFICACIÓN).
 
-CREATE OR REPLACE TRIGGER MODIFICACION_EMPLEADO
-	AFTER UPDATE ON EMPLEADOS 
+CREATE OR REPLACE
+	TRIGGER Modificacion_empleado
+	AFTER UPDATE ON EMPLEADOS
 	FOR EACH ROW
-BEGIN 
+DECLARE
+	cadena VARCHAR2(200);
+BEGIN
+	cadena := TO_CHAR(SYSDATE,'DD/MM/YYYY HH:MI:SS')
+	|| ' - MODIFICACIÓN - ' || :new.NUMEM || ' ' || :new.NOMEM || ' - ';
 	
-	INSERT INTO AUDITORIA_EMPLEADOS VALUES(TO_CHAR(SYSDATE, 'DD/MM/YYYY HH:MI:SS') || ' - MODIFICACIÓN - '|| :OLD.NUMEM || :NEW.NUMEM
-	|| :OLD.NOMEM || :NEW.NOMEM|| :OLD.EXTEL || :NEW.EXTEL|| :OLD.FECNA || :NEW.FECNA|| :OLD.FECIN ||:NEW.FECIN || :OLD.SALAR 
-	|| :NEW.SALAR|| :OLD.COMIS ||:NEW.COMIS || :OLD.NUMHI || :NEW.NUMHI|| :OLD.NUMDE || :NEW.NUMDE || ' - MODIFICACIÓN - ');
+	IF UPDATING('NUMEM') THEN
+		cadena := cadena || 'Num. empleado: '
+		|| :old.NUMEM || '-->' || :new.NUMEM;
+	END IF;
 	
-END;
+	IF UPDATING('NOMEM') THEN
+		cadena := cadena || ', Nombre: '
+		|| :old.NOMEM || '-->' || :new.NOMEM || ', ';
+	END IF;
 
+	IF UPDATING('SALAR') THEN
+		cadena := cadena || ', Salario: '
+		|| :old.SALAR || '-->' || :new.SALAR || ', ';
+	END IF;
+
+	IF UPDATING('COMIS') THEN
+		cadena := cadena || ', Comisión: '
+		|| :old.COMIS || '-->' || :new.COMIS || ', ';
+	END IF;
+
+	IF UPDATING('NUMHI') THEN
+		cadena := cadena || ', Hijos: '
+		|| :old.NUMHI || '-->' || :new.NUMHI || ', ';
+	END IF;
+
+	IF UPDATING('EXTEL') THEN
+		cadena := cadena || ', Extensión: '
+		|| :old.EXTEL || '-->' || :new.EXTEL || ', ';
+	END IF;
+
+	IF UPDATING('NUMDE') THEN
+		cadena := cadena || ', Num. Departamento: '
+		|| :old.NUMDE || '-->' || :new.NUMDE || ', ';
+	END IF;
+
+	INSERT INTO AUDITORIA_EMPLEADOS VALUES(cadena);
+
+END Modificacion_empleado;
 UPDATE EMPLEADOS SET NUMEM = 108 WHERE NUMEM = 110;
 
 
@@ -71,30 +107,101 @@ UPDATE EMPLEADOS SET SALAR = 1900 WHERE SALAR = 1800;
 --actualización de la información. Crea el trigger necesario para realizar inserciones,
 --eliminaciones y modi(caciones en la vista anterior.
 
-CREATE OR REPLACE 
+CREATE OR REPLACE
+	TRIGGER Actualizacion_departamento
+	INSTEAD OF DELETE OR INSERT OR UPDATE ON SEDE_DEPARTAMENTOS
+	FOR EACH ROW
 	
-TRIGGER OPERAR_DATOS_DPT_CENTROS_C 
-	INSTEAD OF INSERT ON SEDE_DEPARTAMENTOS
-	
-BEGIN
-	IF INSERTING THEN 
-	
-		INSERT INTO CENTROS VALUES(:NEW.NUMCE, :NEW.NOMCE, :NEW.DIRCE);
+DECLARE
 
-		INSERT INTO DEPARTAMENTOS VALUES(:NEW.NUMDE, :NEW.NUMCE, :NEW.DIREC, :NEW.TIDIR, :NEW.PRESU, :NEW.DEPDE, :NEW.NOMDE);
+	cantidad NUMBER(3);
+
+BEGIN
+-- Modificamos datos
+IF UPDATING THEN
+
+	UPDATE CENTROS
+	SET NOMCE = :new.NOMCE, DIRCE = :new.DIRCE
+	WHERE NUMCE = :old.NUMCE;
+
+	UPDATE DEPARTAMENTOS
+	SET NUMCE = :new.NUMCE, NOMDE = :new.NOMDE, DIREC = :new.DIREC,
+	TIDIR = :new.TIDIR, PRESU = :new.PRESU, DEPDE = :new.DEPDE
+	WHERE NUMCE = :old.NUMCE AND NUMDE = :old.NUMDE;
+
+-- Borramos datos
+ELSIF DELETING THEN
+-- Si el departamento tiene empleados
+-- los movemos al departamento 'TEMP', luego borramos el partamento
+-- Si el centro tiene departamentos, no borramos el centro.
 	
-	ELSIF UPDATING
-		
-		UPDATE CENTROS WHERE 
+	SELECT COUNT(NUMDE) INTO cantidad
+	FROM EMPLEADOS 
+	WHERE NUMDE = :old.NUMDE;
+
+	IF cantidad > 0 THEN
 	
-	ELSE
-		DELETE FROM CENTROS c WHERE C.NUMCE = :OLD.NUMCE;
-		DELETE FROM DEPARTAMENTOS d WHERE D.NUMDE = :OLD.NUMDE;
+		UPDATE EMPLEADOS SET NUMDE = 0 WHERE NUMDE = :old.NUMDE;
+	
 	END IF;
 
+	DELETE DEPARTAMENTOS WHERE NUMDE = :old.NUMDE;
+	
+	SELECT COUNT(NUMCE) INTO cantidad
+	FROM DEPARTAMENTOS WHERE NUMCE = :old.NUMCE;
+	
+	IF cantidad = 0 THEN
+	
+		DELETE CENTROS WHERE NUMCE = :old.NUMCE;
+	
+	END IF;
 
-END OPERAR_DATOS_DPT_CENTROS_C;
+-- Insertamos datos
+ELSIF INSERTING THEN
+-- Si el centro o el departamento no existe lo damos de alta,
+-- en otro caso actualizamos los datos
+	
+	SELECT COUNT(NUMCE) INTO cantidad
+	FROM CENTROS WHERE NUMCE = :new.NUMCE;
 
+	IF cantidad = 0 THEN
+	
+		INSERT INTO CENTROS
+		VALUES(:new.NUMCE, :new.NOMCE, :new.DIRCE);
+	
+	ELSE
+	
+		UPDATE CENTROS
+		SET NOMCE = :new.NOMCE, DIRCE = :new.DIRCE
+		WHERE NUMCE = :new.NUMCE;
+	
+	END IF;
+
+	SELECT COUNT(NUMDE) INTO cantidad
+	FROM DEPARTAMENTOS WHERE NUMDE = :new.NUMDE;
+
+	IF cantidad = 0 THEN
+	
+		INSERT INTO DEPARTAMENTOS
+		VALUES(:new.NUMDE, :new.NUMCE, :new.DIREC, :new.TIDIR,
+		:new.PRESU, :new.DEPDE, :new.NOMDE);
+	
+	ELSE
+	
+		UPDATE DEPARTAMENTOS
+		SET NUMCE = :new.NUMCE, DIREC = :new.DIREC, TIDIR = :new.TIDIR,
+		PRESU = :new.PRESU, DEPDE = :new.DEPDE, NOMDE = :new.NOMDE
+		WHERE NUMCE = :new.NUMCE;
+	
+	END IF;
+
+ELSE
+
+	RAISE_APPLICATION_ERROR(-20500, 'Error en la actualización');
+
+END IF;
+
+END Actualizacion_departamento;
 -- Inserción de datos
 INSERT INTO SEDE_DEPARTAMENTOS (NUMCE, NUMDE, NOMDE)
 VALUES (30, 310, 'NUEVO1');
