@@ -185,6 +185,49 @@ BEGIN
 	
 END;
 
+--Creamos otro trigger que se active cuando ingresamos un nuevo registro en "empleados",
+--debe almacenar en "controlCambios" el nombre del usuario que realiza el ingreso, la
+--fecha, el tipo de operación que se realiza , "null" en "datoanterior" (porque se dispara con
+--una inserción) y en "datonuevo" el valor del nuevo dato.
+
+CREATE OR REPLACE 
+	TRIGGER INSERT_EMPLE
+	AFTER UPDATE ON EMPLEADOS
+	FOR EACH ROW
+BEGIN 
+	
+	IF INSERTING('DNI') THEN 
+	
+		INSERT INTO controlCambios VALUES (TO_CHAR(USER),SYSDATE,'MODIFICACION',NULL,TO_CHAR(:NEW.DNI));
+	
+	ELSIF INSERTING('NOMEMP' ) THEN
+	
+		INSERT INTO controlCambios VALUES (TO_CHAR(USER),SYSDATE,'MODIFICACION',NULL,TO_CHAR(:NEW.NOMEMP));
+		
+	ELSIF INSERTING('JEFE' ) THEN
+	
+		INSERT INTO controlCambios VALUES (TO_CHAR(USER),SYSDATE,'MODIFICACION',NULL,TO_CHAR(:NEW.JEFE));
+	
+	ELSIF INSERTING('DEPARTAMENTO' ) THEN
+	
+		INSERT INTO controlCambios VALUES (TO_CHAR(USER),SYSDATE,'MODIFICACION',NULL,TO_CHAR(:NEW.DEPARTAMENTO));
+	
+	ELSIF INSERTING('SALARIO' ) THEN
+	
+		INSERT INTO controlCambios VALUES (TO_CHAR(USER),SYSDATE,'MODIFICACION',NULL,TO_CHAR(:NEW.SALARIO));
+	
+	ELSIF INSERTING('USUARIO' ) THEN
+	
+		INSERT INTO controlCambios VALUES (TO_CHAR(USER),SYSDATE,'MODIFICACION',NULL,TO_CHAR(:NEW.USUARIO));
+	
+	ELSIF INSERTING('FECHA' ) THEN
+	
+		INSERT INTO controlCambios VALUES (TO_CHAR(USER),SYSDATE,'MODIFICACION',NULL,TO_CHAR(:NEW.FECHA));
+	
+	END IF;
+	
+	
+END;
 
 UPDATE EMPLEADOS E SET SALARIO = 2100 WHERE E.DNI LIKE '12345678';
 
