@@ -236,38 +236,44 @@ Insert into PEDIDOS
 values
 (4,to_date('20/01/09','DD/MM/YY'),to_date('26/01/09','DD/MM/YY'),null,'Pendien
 te',5);
---Crea un trigger que al actualizar la columna fechaentrega de pedidos la compare con la fechaesperada.
-	--• Si fechaentrega es menor que fechaesperada añadirá a los comentarios 'Pedido
-	--entregado antes de lo esperado'.
-	--• Si fechaentrega es mayor que fechaesperada añadir a los comentarios 'Pedido
-	--entregado con retraso'
 
-CREATE OR REPLACE TRIGGER EMPLEADOS3.PEDIDO_FECHA
-	AFTER UPDATE ON PEDIDOS
-	FOR EACH ROW 
+--Crea un trigger que al actualizar la columna fechaentrega de pedidos la compare con la
+--fechaesperada.
+--• Si fechaentrega es menor que fechaesperada añadirá a los comentarios 'Pedido
+--entregado antes de lo esperado'.
+--• Si fechaentrega es mayor que fechaesperada añadir a los comentarios 'Pedido
+--entregado con retraso'.
+CREATE OR REPLACE TRIGGER EJERCICIO8
+    AFTER UPDATE OF FECHAENTREGA ON PEDIDOS
+    FOR EACH ROW
 DECLARE 
-
-	FECHA_ESPERADA DATE;
-
-BEGIN 
-	IF UPDATING('FECHAENTREGA') THEN 
-	
-		SELECT P.FECHAESPERADA INTO FECHA_ESPERADA
-		FROM EMPLEADOS3.PEDIDOS P
-		WHERE P.FECHAENTREGA = :OLD.FECHAENTREGA;
-	
-		IF :NEW.FECHAENTREGA < FECHA_ESPERADA THEN 
-			UPDATE PEDIDOS S SET S.COMENTARIOS = 'Pedido entregado antes de lo esperado' WHERE S.CODIGOPEDIDO = :OLD.CODIGOPEDIDO;
-		ELSE
-			UPDATE PEDIDOS S SET S.COMENTARIOS = 'Pedido entregado con retraso' WHERE S.CODIGOPEDIDO = :OLD.CODIGOPEDIDO;
-		END IF;
-	END IF;
+    COM CLOB;
+BEGIN
+    IF(:NEW.FECHAENTREGA < :OLD.FECHAESPERADA) THEN
+        COM:='PEDIDO ENTREGADO ANTES DE LO ESPERADO';
+    ELSIF (:NEW.FECHAENTREGA > :OLD.FECHAESPERADA) THEN
+        COM:='PEDIDO ENTREGADO CON RETRASO';
+    END IF;
+    UPDATE PEDIDOS
+    SET COMENTARIOS=COM
+    WHERE FECHAESPERADA=:OLD.FECHAESPERADA;
 END;
 
-
-SELECT *
-FROM PEDIDOS;
-
-UPDATE PEDIDOS S SET S.FECHAENTREGA = SYSDATE WHERE S.CODIGOPEDIDO = 1;
+--Ejercicio 9
+--Modifica el trigger anterior pero solo se ejecute si fechaentrega es mayor que
+--fechaesperada
+CREATE OR REPLACE TRIGGER EJERCICIO9
+    AFTER UPDATE OF FECHAENTREGA ON PEDIDOS
+    FOR EACH ROW
+DECLARE 
+    COM CLOB;
+BEGIN
+    IF(:NEW.FECHAENTREGA > :OLD.FECHAESPERADA) THEN
+        COM:='PEDIDO ENTREGADO CON RETRASO';
+    END IF;
+    UPDATE PEDIDOS
+    SET COMENTARIOS=COM
+    WHERE FECHAESPERADA=:OLD.FECHAESPERADA;
+END;
 
 
